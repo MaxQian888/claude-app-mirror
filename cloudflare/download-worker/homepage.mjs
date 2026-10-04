@@ -105,9 +105,15 @@ export function renderHomepage(manifest, locale = 'zh-CN') {
         <a class="nav-link" href="https://docs.cognia.cn/${lang === 'en' ? 'en' : 'zh'}/docs">${text.docs}${icon('arrow')}</a>
         <a class="nav-link" href="https://github.com/MaxQian888/claude-app-mirror">GitHub${icon('arrow')}</a>
         <a class="locale-switch control" href="${lang === 'en' ? '/' : '/?lang=en'}" lang="${lang === 'en' ? 'zh-CN' : 'en'}" aria-label="${text.language}">${text.alternate}</a>
-        <div class="theme-picker control" hidden>
-          ${icon('monitor', 'theme-system')}${icon('sun', 'theme-light')}${icon('moon', 'theme-dark')}
-          <select id="theme" aria-label="${text.theme}" title="${text.theme}"><option value="system">${text.system}</option><option value="light">${text.light}</option><option value="dark">${text.dark}</option></select>
+        <div class="theme-picker" hidden>
+          <button id="theme-trigger" class="control" type="button" aria-label="${text.theme}" title="${text.theme}" aria-haspopup="menu" aria-expanded="false" aria-controls="theme-menu">
+            ${icon('monitor', 'theme-system')}${icon('sun', 'theme-light')}${icon('moon', 'theme-dark')}
+          </button>
+          <div id="theme-menu" class="theme-menu" role="menu" aria-label="${text.theme}" hidden>
+            <button type="button" role="menuitemradio" aria-checked="false" tabindex="-1" data-mode="light">${icon('sun')}<span>${text.light}</span></button>
+            <button type="button" role="menuitemradio" aria-checked="false" tabindex="-1" data-mode="dark">${icon('moon')}<span>${text.dark}</span></button>
+            <button type="button" role="menuitemradio" aria-checked="true" tabindex="-1" data-mode="system">${icon('monitor')}<span>${text.system}</span></button>
+          </div>
         </div>
       </div>
     </nav>
