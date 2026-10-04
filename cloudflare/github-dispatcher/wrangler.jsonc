@@ -1,5 +1,6 @@
 {
   "name": "claude-app-mirror-dispatcher",
+  "account_id": "1ffdfb42ade04b4cd0859042ae195a88",
   "main": "src/index.js",
   "compatibility_date": "2026-05-23",
   "workers_dev": false,
@@ -14,7 +15,7 @@
   // this file is the per-instance deployment config. Deploy by copying it next
   // to the kit worker's src/ and running `npx wrangler deploy` there.
   "vars": {
-    "DISPATCH_TARGETS": "[{\"owner\":\"Wangnov\",\"repo\":\"claude-app-mirror\",\"inputs\":{\"force_release\":\"false\"}}]"
+    "DISPATCH_TARGETS": "[{\"owner\":\"MaxQian888\",\"repo\":\"claude-app-mirror\",\"inputs\":{\"force_release\":\"false\"}}]"
   },
   "secrets": {
     "required": ["GITHUB_TOKEN"]

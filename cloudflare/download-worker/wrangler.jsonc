@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cognia-mirror",
+  "main": "worker.mjs",
+  "account_id": "1ffdfb42ade04b4cd0859042ae195a88",
+  "compatibility_date": "2026-10-04",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "mirror.cognia.cn", "custom_domain": true }],
+  "r2_buckets": [
+    { "binding": "MIRROR_BUCKET", "bucket_name": "claude-app-mirror" }
+  ]
+}
