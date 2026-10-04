@@ -1,4 +1,4 @@
-// Mirrors Cognia's web/DESIGN.md tokens and navigation mark. Keep page rendering
+// Mirrors Cognia's web/DESIGN.md tokens and shared artwork. Keep page rendering
 // separate from the download handler so presentation cannot alter file streaming.
 const COPY = {
   'zh-CN': {
@@ -58,7 +58,7 @@ const ICONS = {
   apple: '<path d="M15.9 3.4c.8-1 1.3-2.3 1.2-3.4-1.2.1-2.6.8-3.4 1.7-.7.8-1.4 2.1-1.2 3.3 1.3.1 2.6-.6 3.4-1.6ZM19.7 13c0-3 2.5-4.5 2.6-4.6-1.4-2.1-3.6-2.4-4.4-2.4-1.9-.2-3.7 1.1-4.6 1.1-.9 0-2.3-1.1-3.8-1-2 .1-3.9 1.2-4.9 3-2.1 3.6-.5 9 1.5 11.9 1 1.4 2.1 3 3.7 2.9 1.5-.1 2.1-.9 4-.9 1.8 0 2.3.9 3.9.9 1.6 0 2.6-1.4 3.5-2.8 1.2-1.6 1.6-3.2 1.6-3.3-.1 0-3.1-1.2-3.1-4.8Z" transform="translate(-1 1) scale(.9)" fill="currentColor" stroke="none"/>',
 };
 const icon = (name, className = '') => `<svg class="icon ${className}" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-const brand = '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3.25" y="3.25" width="17.5" height="17.5" rx="2.5" stroke="currentColor" stroke-width="1.4" opacity=".55"/><g stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M12 1.5v2.4m0 16.2v2.4M1.5 12h2.4m16.2 0h2.4M6.9 9.1h3.4a1.6 1.6 0 0 1 1.6 1.6v3.6"/></g><circle cx="11.9" cy="15.9" r="1.75" fill="var(--action)"/></svg>';
+const brand = '<img class="brand-logo" src="/assets/cognia-logo.png" alt="" width="32" height="32">';
 
 function escape(value) {
   return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);

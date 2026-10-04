@@ -159,6 +159,13 @@ button:focus-visible {
   font-size: 16px;
   font-weight: 500;
 }
+.brand-logo {
+  display: block;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 22%;
+}
 .brand-group {
   gap: 17px;
 }
@@ -627,9 +634,9 @@ h2 {
   font-size: 13px;
   gap: 8px;
 }
-.footer-brand svg {
-  width: 20px;
-  height: 20px;
+.footer-brand .brand-logo {
+  width: 28px;
+  height: 28px;
 }
 .footer-mirror {
   font-weight: 400;
@@ -718,9 +725,9 @@ h2 {
   .brand {
     font-size: 14px;
   }
-  .brand svg {
-    width: 22px;
-    height: 22px;
+  .brand-logo {
+    width: 28px;
+    height: 28px;
   }
   .nav-link {
     display: none;
