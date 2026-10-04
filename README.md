@@ -82,7 +82,7 @@ claude-app-v1.9659.2
 - Windows arm64：[https://mirror.cognia.cn/latest/win-arm64](https://mirror.cognia.cn/latest/win-arm64)
 - 校验和：[https://mirror.cognia.cn/latest/checksums](https://mirror.cognia.cn/latest/checksums)
 
-需要旧版本时，请到 [GitHub Releases](https://github.com/MaxQian888/claude-app-mirror/releases) 按 tag 查找历史资产。
+GitHub Releases 和 R2 均只保留最新版本的安装包，不提供历史安装包下载。旧的已发布 Release 会被删除，但 Git tags 和 Release 草稿会保留。
 
 ### 安装
 
@@ -172,7 +172,7 @@ You can also use the R2 short links directly (mainland-China-friendly, latest-on
 - Windows arm64: [https://mirror.cognia.cn/latest/win-arm64](https://mirror.cognia.cn/latest/win-arm64)
 - Checksums: [https://mirror.cognia.cn/latest/checksums](https://mirror.cognia.cn/latest/checksums)
 
-For older versions, use [GitHub Releases](https://github.com/MaxQian888/claude-app-mirror/releases) and download assets from the matching tag.
+GitHub Releases and R2 retain only the latest installers; historical installer downloads are not available. Older published releases are deleted, while Git tags and release drafts are preserved.
 
 ### Install
 
@@ -216,9 +216,34 @@ If upstream is unchanged, the workflow checks the public R2 manifest. A missing 
 - Download Worker: [`cloudflare/download-worker`](cloudflare/download-worker/README.md), serving `https://mirror.cognia.cn` from the `claude-app-mirror` R2 bucket.
 - Cron dispatcher: [`cloudflare/github-dispatcher`](cloudflare/github-dispatcher/README.md), targeting this fork every 15 minutes.
 - GitHub Actions secrets: `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `CF_ANALYTICS_API_TOKEN` (Account Analytics: Read). R2 credentials require object read/write access to this bucket.
-- To repair R2, run **Mirror Claude Desktop Installers** with `resync_r2=true`. Leave `release_tag` empty to restore the latest GitHub Release, or supply an existing tag to intentionally restore that release. This skips upstream probing and does not create a new release.
+- To repair R2, run **Mirror Claude Desktop Installers** with `resync_r2=true`. Leave `release_tag` empty to restore the latest GitHub Release; an explicit tag must match that latest release. This skips upstream probing and does not create a new release.
 
-手动修复 R2 时，在 Actions 中启用 `resync_r2`，默认恢复最新 Release；指定历史 `release_tag` 会将公网下载回退到该版本。恢复前会验证安装包和 manifest 的 SHA-256。下载 Worker 只公开下载、校验和、manifest 和统计徽章，不公开 staging 或统计内部状态。
+手动修复 R2 时，在 Actions 中启用 `resync_r2`，留空 `release_tag` 即恢复最新 Release；显式指定的 tag 必须与最新 Release 一致。恢复前会验证安装包和 manifest 的 SHA-256。下载 Worker 只公开下载、校验和、manifest 和统计徽章，不公开 staging 或统计内部状态。
 
 The badge counts R2 installer `GetObject` requests, not unique users or completed downloads. Initial backfill is limited to the available analytics retention window.
 统计徽章计数为安装包对象的 R2 GET 请求次数，不等于独立用户数或完整下载次数；首次回填受分析数据保留期限制。
+
+### Latest-only retention / 仅保留最新版
+
+After a successful publish, R2 recovery, or no-change check, the mirror workflow
+validates that the latest GitHub Release and R2 agree on the manifest, checksums,
+and installer sizes. When there is anything to delete, it also downloads the
+three R2 installers and verifies their SHA-256 hashes first. A failed or cancelled workflow
+branch prevents cleanup. Older published GitHub Releases and their assets are
+removed; Git tags and release drafts remain.
+
+R2 keeps exactly `latest/mac`, `latest/win-x64`, `latest/win-arm64`,
+`latest/checksums`, and `latest/manifest`, plus every object under `stats/`.
+Other objects, including abandoned staging uploads, are removed. Cleanup shares
+the mirror workflow's concurrency lock so it cannot delete active staging
+uploads. Download statistics and their internal state are preserved.
+
+发布、R2 恢复或无更新检查成功后，镜像 workflow 会先核对最新 GitHub Release
+与 R2 的 manifest、校验和及安装包大小；有待删除内容时，还会下载三个 R2
+安装包并验证 SHA-256，一致后才执行清理。任一分支失败或取消
+都会阻止清理。旧的已发布 GitHub Release 及其附件会被删除，Git tags 和
+Release 草稿保留。
+
+R2 仅保留上述五个 `latest/` 对象，以及 `stats/` 下的全部对象；其他对象
+（包括遗留 staging 上传）会被删除。清理与镜像上传共用 workflow 并发锁，
+避免删除正在上传的 staging 对象。下载统计及其内部状态会保留。

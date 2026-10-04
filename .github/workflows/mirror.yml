@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Optional new release tag, or existing release to restore when resync_r2 is enabled.
+        description: Optional new release tag. For resync_r2, only the current latest release tag is accepted.
         required: false
         type: string
       force_release:
@@ -13,7 +13,7 @@ on:
         default: false
         type: boolean
       resync_r2:
-        description: Restore R2 from an existing GitHub Release without publishing a new release.
+        description: Restore R2 from the latest GitHub Release without publishing a new release.
         required: false
         default: false
         type: boolean
@@ -125,16 +125,6 @@ jobs:
             SHA256SUMS.txt \
             release-manifest.json
 
-      - name: Remove latest links from previous release notes
-        if: needs.probe.outputs.latest_tag != ''
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PREVIOUS_TAG: ${{ needs.probe.outputs.latest_tag }}
-        shell: bash
-        run: bash .mirror-kit/scripts/remove-latest-links-from-release-notes.sh "$PREVIOUS_TAG"
-
       - name: Ensure AWS CLI
         shell: bash
         run: |
@@ -204,3 +194,38 @@ jobs:
           echo "No new Claude desktop version detected."
           echo "$SKIP_REASON"
           echo "$VERSION_SUMMARY"
+
+  retention:
+    name: Keep only the latest mirrored release
+    runs-on: ubuntu-latest
+    needs: [probe, release, recover_r2, no_changes]
+    if: >-
+      always() && !cancelled() &&
+      needs.probe.result == 'success' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.release.result == 'success' ||
+       needs.recover_r2.result == 'success' ||
+       needs.no_changes.result == 'success')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Ensure AWS CLI
+        run: |
+          set -euo pipefail
+          if ! command -v aws >/dev/null 2>&1; then
+            python3 -m pip install --user awscli
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Validate latest mirror and prune older releases and objects
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_S3_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: python3 scripts/prune_mirror.py --apply

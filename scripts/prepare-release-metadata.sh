@@ -117,7 +117,7 @@ jq \
   echo "- 校验和: ${r2_public_base_url}/latest/checksums"
   echo "- Manifest: ${r2_public_base_url}/latest/manifest"
   echo
-  echo "R2 短链是面向国内网络准备的下载镜像，只保留当前最新版。需要旧版本时，请到本仓库 Releases 按 tag 查找历史资产。"
+  echo "GitHub Releases 和 R2 均只保留最新版本的安装包，不提供历史安装包下载。核对最新 Release 与 R2 一致后，才清理旧 Release 及多余 R2 对象；Git tags、Release 草稿及 stats/ 统计数据保留。"
   echo "<!-- latest-links-cn:end -->"
   echo
   echo "## 安装说明"
@@ -162,7 +162,7 @@ jq \
   echo "- Checksums: ${r2_public_base_url}/latest/checksums"
   echo "- Manifest: ${r2_public_base_url}/latest/manifest"
   echo
-  echo "These links always point to the newest mirrored version. For older versions, use this repository's Releases and download assets from the matching tag."
+  echo "GitHub Releases and R2 retain only the latest installers; historical downloads are not available. Older releases and extra R2 objects are pruned only after the latest release and mirror agree. Git tags, release drafts, and stats/ data are preserved."
   echo "<!-- latest-links-en:end -->"
   echo
   echo "## Install"

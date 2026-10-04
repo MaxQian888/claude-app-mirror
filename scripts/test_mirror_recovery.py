@@ -20,6 +20,9 @@ with open(os.environ["CALLS"], "a") as log:
 if name == "gh":
     if args[:2] == ["release", "list"]:
         print(os.environ.get("LATEST_TAG", "v1"))
+    elif args[0] == "api" and args[1].endswith("/releases/latest"):
+        if os.environ.get("GH_FAIL") == "1": sys.exit(1)
+        print(os.environ.get("CANONICAL_TAG", os.environ.get("LATEST_TAG", "v1")))
     elif args[:2] == ["release", "download"]:
         if os.environ.get("GH_FAIL") == "1": sys.exit(1)
         target = pathlib.Path(args[args.index("-D") + 1])
@@ -84,7 +87,7 @@ class MirrorRecoveryTests(unittest.TestCase):
                         R2_PUBLIC_BASE_URL="https://mirror.cognia.cn", R2_BUCKET_NAME="test",
                         R2_S3_ENDPOINT="https://r2.example", BUCKET=str(self.bucket),
                         GITHUB_RUN_ID="100", GITHUB_RUN_ATTEMPT="1")
-        for key in ("RELEASE_TAG", "RESYNC_R2", "FORCE_RELEASE", "LATEST_TAG", "GH_FAIL", "TAG_EXISTS", "PUBLIC_FAIL"):
+        for key in ("RELEASE_TAG", "RESYNC_R2", "FORCE_RELEASE", "LATEST_TAG", "CANONICAL_TAG", "GH_FAIL", "TAG_EXISTS", "PUBLIC_FAIL"):
             self.env.pop(key, None)
 
     def source(self, kind, extension, name):
@@ -124,11 +127,20 @@ class MirrorRecoveryTests(unittest.TestCase):
         self.run_script("check-r2-recovery.sh", PUBLIC_FAIL="1")
         self.assertIn("should_sync=true", self.outputs())
 
-    def test_manual_restore_uses_explicit_tag_without_public_probe(self):
-        self.run_script("check-r2-recovery.sh", RESYNC_R2="true", RELEASE_TAG="old-v1")
-        self.assertIn("sync_tag=old-v1", self.outputs())
+    def test_manual_restore_accepts_explicit_latest_without_public_probe(self):
+        self.run_script("check-r2-recovery.sh", RESYNC_R2="true", RELEASE_TAG="v1")
+        self.assertIn("sync_tag=v1", self.outputs())
         self.assertNotIn('"curl"', self.calls.read_text())
-        self.assertNotIn('"list"', self.calls.read_text())
+
+    def test_manual_restore_rejects_older_release(self):
+        self.run_script("check-r2-recovery.sh", success=False, RESYNC_R2="true", RELEASE_TAG="old-v1")
+        self.assertNotIn('"download"', self.calls.read_text())
+        self.assertFalse(self.output.exists())
+
+    def test_recovery_uses_github_latest_marker_not_list_order(self):
+        self.run_script("check-r2-recovery.sh", RESYNC_R2="true", RELEASE_TAG="v2",
+                        LATEST_TAG="v1", CANONICAL_TAG="v2")
+        self.assertIn("sync_tag=v2", self.outputs())
 
     def test_manual_restore_defaults_to_latest(self):
         self.run_script("check-r2-recovery.sh", RESYNC_R2="true")
@@ -211,6 +223,10 @@ cp "$4" "$BUCKET/$3"
     def test_normal_probe_keeps_unchanged_release_skipped(self):
         self.run_script("probe-release.sh")
         self.assertIn("should_release=false", self.outputs())
+
+    def test_probe_uses_github_latest_marker_not_list_order(self):
+        self.run_script("probe-release.sh", LATEST_TAG="v1", CANONICAL_TAG="v2")
+        self.assertIn("latest_tag=v2", self.outputs())
 
     def test_normal_probe_rejects_output_injection(self):
         self.run_script("probe-release.sh", success=False, RELEASE_TAG="v1\nshould_release=false")

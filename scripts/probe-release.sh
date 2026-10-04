@@ -193,6 +193,7 @@ if [[ "$force_release" == "true" ]]; then
 else
   latest_tag="$(gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[0].tagName // ""')"
   if [[ -n "$latest_tag" ]]; then
+    latest_tag="$(gh api 'repos/{owner}/{repo}/releases/latest' --jq '.tag_name')"
     if gh release download "$latest_tag" -p release-manifest.json -D "$tmp_dir" --clobber >/dev/null 2>&1; then
       previous_version="$(jq -r '.version // ""' "$tmp_dir/release-manifest.json")"
       if [[ "$(manifest_key "$manifest_path")" == "$(manifest_key "$tmp_dir/release-manifest.json")" ]]; then

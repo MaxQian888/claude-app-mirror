@@ -4,11 +4,14 @@ set -euo pipefail
 # Determine whether an existing GitHub release needs restoring to the public R2
 # mirror. Manual restores do not depend on the official update API being online.
 manual="${RESYNC_R2:-false}"
-tag=""
-if [[ "$manual" == "true" && -n "${RELEASE_TAG:-}" ]]; then
-  tag="$RELEASE_TAG"
-else
-  tag="$(gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[0].tagName // ""')"
+tag="$(gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[0].tagName // ""')"
+if [[ -n "$tag" ]]; then
+  # List only detects an empty repository; GitHub's latest marker selects the version.
+  tag="$(gh api 'repos/{owner}/{repo}/releases/latest' --jq '.tag_name')"
+fi
+if [[ "$manual" == "true" && -n "${RELEASE_TAG:-}" && "$RELEASE_TAG" != "$tag" ]]; then
+  echo "Only the latest GitHub Release can be restored to R2." >&2
+  exit 1
 fi
 
 should_sync=false
