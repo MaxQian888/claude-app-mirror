@@ -26,7 +26,10 @@ jobs:
 
       - name: Syntax-check shell scripts
         shell: bash
-        run: bash -n scripts/*.sh
+        run: |
+          for script in scripts/*.sh; do
+            bash -n "$script"
+          done
 
       - name: Shellcheck
         shell: bash
@@ -35,6 +38,18 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y shellcheck
           shellcheck scripts/*.sh
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Test download Worker
+        run: |
+          npm ci --prefix cloudflare/download-worker
+          npm test --prefix cloudflare/download-worker
+
+      - name: Test mirror recovery
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
 
       - name: Validate GitHub Actions
         shell: bash

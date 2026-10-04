@@ -21,6 +21,11 @@ force_release="${FORCE_RELEASE:-false}"
 release_tag_input="${RELEASE_TAG:-}"
 manifest_path="${MANIFEST_PATH:-release-manifest.json}"
 
+if [[ "$release_tag_input" == -* || "$release_tag_input" == *$'\n'* || "$release_tag_input" == *$'\r'* ]]; then
+  echo "Invalid release tag." >&2
+  exit 1
+fi
+
 curl_retry_args=(
   --retry 5
   --retry-delay 2
