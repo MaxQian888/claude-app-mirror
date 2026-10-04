@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Wangnov/claude-app-mirror/releases/latest"><img src="https://img.shields.io/endpoint?url=https://claudeapp.agentsmirror.com/stats/downloads.json" alt="R2 cumulative installer downloads"></a>
-  <a href="https://github.com/Wangnov/claude-app-mirror/releases/latest"><img src="https://img.shields.io/github/release-date/Wangnov/claude-app-mirror?label=updated&logo=github" alt="Latest update time"></a>
-  <a href="https://github.com/Wangnov/claude-app-mirror/actions/workflows/mirror.yml"><img src="https://img.shields.io/github/actions/workflow/status/Wangnov/claude-app-mirror/mirror.yml?branch=main&label=mirror&logo=githubactions" alt="Mirror workflow"></a>
-  <a href="https://github.com/Wangnov/claude-app-mirror/actions/workflows/mirror.yml"><img src="https://img.shields.io/badge/polling-every%2015%20minutes-2ea44f" alt="15 minute polling"></a>
-  <a href="https://github.com/Wangnov/claude-app-mirror/releases/latest"><img src="https://img.shields.io/badge/macOS-universal-D97757?logo=apple&logoColor=white" alt="macOS universal"></a>
-  <a href="https://github.com/Wangnov/claude-app-mirror/releases/latest"><img src="https://img.shields.io/badge/Windows-x64%20%7C%20arm64%20MSIX-0078d4?logo=windows&logoColor=white" alt="Windows x64 and arm64 MSIX"></a>
+  <a href="https://github.com/MaxQian888/claude-app-mirror/releases/latest"><img src="https://img.shields.io/endpoint?url=https://mirror.cognia.cn/stats/downloads.json" alt="R2 cumulative installer downloads"></a>
+  <a href="https://github.com/MaxQian888/claude-app-mirror/releases/latest"><img src="https://img.shields.io/github/release-date/MaxQian888/claude-app-mirror?label=updated&logo=github" alt="Latest update time"></a>
+  <a href="https://github.com/MaxQian888/claude-app-mirror/actions/workflows/mirror.yml"><img src="https://img.shields.io/github/actions/workflow/status/MaxQian888/claude-app-mirror/mirror.yml?branch=main&label=mirror&logo=githubactions" alt="Mirror workflow"></a>
+  <a href="https://github.com/MaxQian888/claude-app-mirror/actions/workflows/mirror.yml"><img src="https://img.shields.io/badge/polling-every%2015%20minutes-2ea44f" alt="15 minute polling"></a>
+  <a href="https://github.com/MaxQian888/claude-app-mirror/releases/latest"><img src="https://img.shields.io/badge/macOS-universal-D97757?logo=apple&logoColor=white" alt="macOS universal"></a>
+  <a href="https://github.com/MaxQian888/claude-app-mirror/releases/latest"><img src="https://img.shields.io/badge/Windows-x64%20%7C%20arm64%20MSIX-0078d4?logo=windows&logoColor=white" alt="Windows x64 and arm64 MSIX"></a>
   <a href="https://linux.do/"><img src="https://img.shields.io/badge/LINUX%20DO-community-f0a020?logo=discourse&logoColor=white" alt="LINUX DO community"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/github/license/Wangnov/claude-app-mirror?label=license&color=D97757" alt="License"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/MaxQian888/claude-app-mirror?label=license&color=D97757" alt="License"></a>
 </p>
 
 <p align="center">
@@ -69,7 +69,7 @@ claude-app-v1.9659.2
 
 ## 怎么用
 
-打开 [最新 GitHub Release](https://github.com/Wangnov/claude-app-mirror/releases/latest)，下载你的平台对应文件：
+打开 [最新 GitHub Release](https://github.com/MaxQian888/claude-app-mirror/releases/latest)，下载你的平台对应文件：
 
 - macOS：`Claude-mac-universal.dmg`
 - Windows x64：`Claude-win-x64.msix`
@@ -77,12 +77,12 @@ claude-app-v1.9659.2
 
 也可以直接使用 R2 短链接（面向国内网络，只保留最新版）：
 
-- macOS：[https://claudeapp.agentsmirror.com/latest/mac](https://claudeapp.agentsmirror.com/latest/mac)
-- Windows x64：[https://claudeapp.agentsmirror.com/latest/win-x64](https://claudeapp.agentsmirror.com/latest/win-x64)
-- Windows arm64：[https://claudeapp.agentsmirror.com/latest/win-arm64](https://claudeapp.agentsmirror.com/latest/win-arm64)
-- 校验和：[https://claudeapp.agentsmirror.com/latest/checksums](https://claudeapp.agentsmirror.com/latest/checksums)
+- macOS：[https://mirror.cognia.cn/latest/mac](https://mirror.cognia.cn/latest/mac)
+- Windows x64：[https://mirror.cognia.cn/latest/win-x64](https://mirror.cognia.cn/latest/win-x64)
+- Windows arm64：[https://mirror.cognia.cn/latest/win-arm64](https://mirror.cognia.cn/latest/win-arm64)
+- 校验和：[https://mirror.cognia.cn/latest/checksums](https://mirror.cognia.cn/latest/checksums)
 
-需要旧版本时，请到 [GitHub Releases](https://github.com/Wangnov/claude-app-mirror/releases) 按 tag 查找历史资产。
+需要旧版本时，请到 [GitHub Releases](https://github.com/MaxQian888/claude-app-mirror/releases) 按 tag 查找历史资产。
 
 ### 安装
 
@@ -105,7 +105,7 @@ Cloudflare Cron Worker 每 15 分钟触发一次 GitHub Actions 的 `Mirror Clau
 - 对落地的 `downloads.claude.ai` 产物做 HEAD，读取 `Content-Length`、`ETag`、`Last-Modified`
 - 与最新 Release 的 `release-manifest.json` 比对
 
-如果没有变化，workflow 在探测阶段结束，不下载、不发布重复 Release。若发现新版本，则下载三个安装包、生成校验和与 manifest，发布新的 GitHub Release，并同步到 R2。
+如果上游没有变化，workflow 会继续核对 R2 公网 manifest。缺失或不一致时，从现有 GitHub Release 下载并验证资产后恢复 R2，不发布重复 Release。若发现新版本，则下载三个安装包、生成校验和与 manifest，发布新的 GitHub Release，并同步到 R2。
 
 ## 上游来源
 
@@ -159,7 +159,7 @@ The version comes from the official update API's `currentRelease`, matching the 
 
 ## Usage
 
-Open the [latest GitHub Release](https://github.com/Wangnov/claude-app-mirror/releases/latest) and download the asset for your platform:
+Open the [latest GitHub Release](https://github.com/MaxQian888/claude-app-mirror/releases/latest) and download the asset for your platform:
 
 - macOS: `Claude-mac-universal.dmg`
 - Windows x64: `Claude-win-x64.msix`
@@ -167,12 +167,12 @@ Open the [latest GitHub Release](https://github.com/Wangnov/claude-app-mirror/re
 
 You can also use the R2 short links directly (mainland-China-friendly, latest-only):
 
-- macOS: [https://claudeapp.agentsmirror.com/latest/mac](https://claudeapp.agentsmirror.com/latest/mac)
-- Windows x64: [https://claudeapp.agentsmirror.com/latest/win-x64](https://claudeapp.agentsmirror.com/latest/win-x64)
-- Windows arm64: [https://claudeapp.agentsmirror.com/latest/win-arm64](https://claudeapp.agentsmirror.com/latest/win-arm64)
-- Checksums: [https://claudeapp.agentsmirror.com/latest/checksums](https://claudeapp.agentsmirror.com/latest/checksums)
+- macOS: [https://mirror.cognia.cn/latest/mac](https://mirror.cognia.cn/latest/mac)
+- Windows x64: [https://mirror.cognia.cn/latest/win-x64](https://mirror.cognia.cn/latest/win-x64)
+- Windows arm64: [https://mirror.cognia.cn/latest/win-arm64](https://mirror.cognia.cn/latest/win-arm64)
+- Checksums: [https://mirror.cognia.cn/latest/checksums](https://mirror.cognia.cn/latest/checksums)
 
-For older versions, use [GitHub Releases](https://github.com/Wangnov/claude-app-mirror/releases) and download assets from the matching tag.
+For older versions, use [GitHub Releases](https://github.com/MaxQian888/claude-app-mirror/releases) and download assets from the matching tag.
 
 ### Install
 
@@ -195,7 +195,7 @@ Each run starts with a lightweight probe:
 - HEAD the resulting `downloads.claude.ai` artifacts for `Content-Length`, `ETag`, `Last-Modified`
 - Compare against the latest release's `release-manifest.json`
 
-If nothing changed, the workflow stops after the probe. If a new version appears, it downloads the three installers, writes checksums and a manifest, publishes a new GitHub Release, and syncs to R2.
+If upstream is unchanged, the workflow checks the public R2 manifest. A missing or mismatched manifest triggers recovery from verified assets in the existing GitHub Release without publishing a duplicate. If a new version appears, it downloads the three installers, writes checksums and a manifest, publishes a new GitHub Release, and syncs to R2.
 
 ## Upstream sources
 
@@ -210,3 +210,15 @@ If nothing changed, the workflow stops after the probe. If a new version appears
 - It does not mirror the website `ClaudeSetup.exe` online bootstrapper, nor Squirrel incremental packages (`.nupkg` / auto-update `.zip`)
 - It does not provide a Linux desktop client (none exists officially)
 - It is not a replacement for Anthropic's official distribution channels
+
+## Deployment and recovery / 部署与恢复
+
+- Download Worker: [`cloudflare/download-worker`](cloudflare/download-worker/README.md), serving `https://mirror.cognia.cn` from the `claude-app-mirror` R2 bucket.
+- Cron dispatcher: [`cloudflare/github-dispatcher`](cloudflare/github-dispatcher/README.md), targeting this fork every 15 minutes.
+- GitHub Actions secrets: `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `CF_ANALYTICS_API_TOKEN` (Account Analytics: Read). R2 credentials require object read/write access to this bucket.
+- To repair R2, run **Mirror Claude Desktop Installers** with `resync_r2=true`. Leave `release_tag` empty to restore the latest GitHub Release, or supply an existing tag to intentionally restore that release. This skips upstream probing and does not create a new release.
+
+手动修复 R2 时，在 Actions 中启用 `resync_r2`，默认恢复最新 Release；指定历史 `release_tag` 会将公网下载回退到该版本。恢复前会验证安装包和 manifest 的 SHA-256。下载 Worker 只公开下载、校验和、manifest 和统计徽章，不公开 staging 或统计内部状态。
+
+The badge counts R2 installer `GetObject` requests, not unique users or completed downloads. Initial backfill is limited to the available analytics retention window.
+统计徽章计数为安装包对象的 R2 GET 请求次数，不等于独立用户数或完整下载次数；首次回填受分析数据保留期限制。

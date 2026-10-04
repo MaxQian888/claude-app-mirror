@@ -8,7 +8,7 @@ set -euo pipefail
 
 probe_manifest="${1:-probe-manifest.json}"
 artifacts_dir="${2:-dist}"
-r2_public_base_url="${3:-https://claudeapp.agentsmirror.com}"
+r2_public_base_url="${3:-https://mirror.cognia.cn}"
 release_tag_override="${4:-}"
 
 require() {
