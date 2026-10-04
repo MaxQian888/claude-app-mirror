@@ -1,3 +1,5 @@
+import { renderHomepage } from './homepage.mjs';
+
 const PUBLIC_FILES = new Map([
   ['/latest/mac', ['latest/mac', 'Claude-mac-universal.dmg', 'application/octet-stream']],
   ['/latest/win-x64', ['latest/win-x64', 'Claude-win-x64.msix', 'application/octet-stream']],
@@ -6,18 +8,6 @@ const PUBLIC_FILES = new Map([
   ['/latest/manifest', ['latest/manifest', 'release-manifest.json', 'application/json']],
   ['/stats/downloads.json', ['stats/downloads.json', null, 'application/json']],
 ]);
-
-const HOME = `<!doctype html>
-<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Claude Desktop · Cognia Mirror</title>
-<style>body{max-width:42rem;margin:4rem auto;padding:0 1.5rem;font:18px/1.7 system-ui;color:#242424;background:#faf9f6}a{color:#155b90}li{margin:.7rem 0}</style>
-<h1>Claude Desktop 下载镜像</h1><p>Unofficial mirror · 非官方镜像，由 Cognia 维护。</p>
-<ul><li><a href="/latest/mac">macOS Universal</a></li>
-<li><a href="/latest/win-x64">Windows x64</a></li>
-<li><a href="/latest/win-arm64">Windows ARM64</a></li>
-<li><a href="/latest/checksums">SHA-256 校验和 / Checksums</a></li>
-<li><a href="/latest/manifest">版本信息 / Release manifest</a></li></ul>
-<p><a href="https://github.com/MaxQian888/claude-app-mirror/releases/latest">GitHub Release</a> · <a href="https://claude.ai/download">官方下载 / Official download</a></p></html>`;
 
 function response(request, body, status, headers = {}) {
   return new Response(request.method === 'HEAD' ? null : body, {
@@ -132,8 +122,28 @@ export default {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return response(request, 'Method not allowed', 405, { Allow: 'GET, HEAD' });
     }
-    const pathname = new URL(request.url).pathname;
-    if (pathname === '/') return response(request, HOME, 200, { 'Content-Type': 'text/html; charset=utf-8' });
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+    if (pathname === '/') {
+      const locale = url.searchParams.get('lang') === 'en' ? 'en' : 'zh-CN';
+      const headers = { 'Content-Type': 'text/html; charset=utf-8', 'Content-Language': locale };
+      if (request.method === 'HEAD') return response(request, null, 200, headers);
+      let manifest = null;
+      try {
+        const object = await env.MIRROR_BUCKET.get('latest/manifest');
+        if (object) {
+          if (object.size > 64 * 1024) {
+            await object.body.cancel();
+            console.warn('Homepage manifest exceeds size limit');
+          } else {
+            manifest = await object.json();
+          }
+        }
+      } catch {
+        console.warn('Homepage manifest unavailable');
+      }
+      return response(request, renderHomepage(manifest, locale), 200, headers);
+    }
     const file = PUBLIC_FILES.get(pathname);
     if (!file) return response(request, 'Not found', 404);
     try {

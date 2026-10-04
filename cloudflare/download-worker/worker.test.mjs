@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import worker from './worker.mjs';
 
@@ -12,8 +12,10 @@ before(async () => {
   runtime = new Miniflare(convertV4MiniflareOptions({
     workers: [{
       name: 'mirror',
-      modules: true,
-      script: await readFile(new URL('./worker.mjs', import.meta.url), 'utf8'),
+      modules: ['worker.mjs', 'homepage.mjs'].map((name) => ({
+        type: 'ESModule',
+        path: fileURLToPath(new URL(name, import.meta.url)),
+      })),
       compatibilityDate: '2026-10-04',
       r2Buckets: ['MIRROR_BUCKET'],
     }],
@@ -180,4 +182,92 @@ test('R2 errors and continuous replacement return a retryable response', async (
   const failed = await worker.fetch(request, { MIRROR_BUCKET: { head: async () => { throw new Error('test R2 unavailable'); } } });
   assert.equal(failed.status, 503);
   assert.equal(failed.headers.get('Retry-After'), '30');
+});
+
+
+test('homepage renders live manifest metadata and selects Chinese or English', async () => {
+  await bucket.put('latest/manifest', JSON.stringify({
+    version: '2.19675.0',
+    generatedAt: '2026-10-04T08:00:00Z',
+    sources: {
+      macos: { universal: { version: '2.19675.0', contentLength: 100_000_000 } },
+      windows: {
+        x64: { version: '2.19675.1', contentLength: 200_000_000 },
+        arm64: { version: '2.19675.2', contentLength: 300_000_000 },
+      },
+    },
+  }));
+  for (const [query, locale] of [['', 'zh-CN'], ['?lang=en', 'en'], ['?lang=unknown', 'zh-CN']]) {
+    const result = await fetch(`/${query}`);
+    const html = await result.text();
+    assert.equal(result.status, 200);
+    assert.equal(result.headers.get('Content-Language'), locale);
+    assert.equal(result.headers.get('Cache-Control'), 'no-store');
+    assert.equal(result.headers.get('X-Content-Type-Options'), 'nosniff');
+    assert.match(html, new RegExp(`<html[^>]+lang="${locale}"`));
+    assert.match(html, /v2\.19675\.0/);
+    assert.match(html, /v2\.19675\.1/);
+    assert.match(html, /v2\.19675\.2/);
+    for (const path of ['/latest/mac', '/latest/win-x64', '/latest/win-arm64']) {
+      assert.ok(html.includes(path));
+    }
+    assert.match(html, /100(?:\.0)?\s*(?:MiB|MB)/);
+    assert.match(html, /200(?:\.0)?\s*(?:MiB|MB)/);
+    assert.match(html, /300(?:\.0)?\s*(?:MiB|MB)/);
+  }
+});
+
+test('homepage remains downloadable when the manifest is missing or malformed', async () => {
+  await bucket.delete('latest/manifest');
+  for (const contents of [null, '{broken json']) {
+    if (contents !== null) await bucket.put('latest/manifest', contents);
+    const result = await fetch('/');
+    assert.equal(result.status, 200);
+    const html = await result.text();
+    for (const path of ['/latest/mac', '/latest/win-x64', '/latest/win-arm64']) {
+      assert.ok(html.includes(path));
+    }
+    assert.doesNotMatch(html, /broken json/);
+  }
+});
+
+test('homepage handles R2 failures without logging error contents', async (context) => {
+  const warnings = context.mock.method(console, 'warn', () => {});
+  const result = await worker.fetch(new Request('https://mirror.cognia.cn/?lang=en'), {
+    MIRROR_BUCKET: { get: async () => { throw new Error('private-provider-details'); } },
+  });
+  assert.equal(result.status, 200);
+  assert.match(await result.text(), /\/latest\/mac/);
+  assert.deepEqual(warnings.mock.calls.map(({ arguments: args }) => args), [['Homepage manifest unavailable']]);
+});
+
+test('oversized homepage metadata is discarded without parsing and cancels its stream', async (context) => {
+  const warnings = context.mock.method(console, 'warn', () => {});
+  let cancelled = false;
+  const result = await worker.fetch(new Request('https://mirror.cognia.cn/'), {
+    MIRROR_BUCKET: {
+      get: async () => ({
+        size: 65537,
+        body: { cancel: async () => { cancelled = true; } },
+        json: () => assert.fail('oversized metadata must not be parsed'),
+      }),
+    },
+  });
+  assert.equal(result.status, 200);
+  assert.match(await result.text(), /\/latest\/mac/);
+  assert.equal(cancelled, true);
+  assert.deepEqual(warnings.mock.calls.map(({ arguments: args }) => args), [['Homepage manifest exceeds size limit']]);
+});
+
+test('homepage HEAD returns localized HTML headers without accessing R2', async () => {
+  for (const [query, locale] of [['', 'zh-CN'], ['?lang=en', 'en']]) {
+    const result = await worker.fetch(new Request(`https://mirror.cognia.cn/${query}`, { method: 'HEAD' }), {
+      get MIRROR_BUCKET() { assert.fail('HEAD must not access R2'); },
+    });
+    assert.equal(result.status, 200);
+    assert.equal(result.headers.get('Content-Type'), 'text/html; charset=utf-8');
+    assert.equal(result.headers.get('Content-Language'), locale);
+    assert.equal(result.headers.get('Cache-Control'), 'no-store');
+    assert.equal(await result.text(), '');
+  }
 });
